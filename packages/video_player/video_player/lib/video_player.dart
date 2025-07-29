@@ -20,7 +20,8 @@ export 'package:video_player_platform_interface/video_player_platform_interface.
         VideoFormat,
         VideoPlayerOptions,
         VideoPlayerWebOptions,
-        VideoPlayerWebOptionsControls;
+        VideoPlayerWebOptionsControls,
+        Buffer;
 
 export 'src/closed_caption_file.dart';
 
@@ -689,7 +690,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (_isDisposed) {
       return null;
     }
-    return await _videoPlayerPlatform.getDuration(_textureId);
+    return _videoPlayerPlatform.getDuration(_textureId);
   }
 
   /// Get latest isPlaying status from ExoPlayer/AVPlayer
@@ -697,7 +698,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (_isDisposed) {
       return false;
     }
-    return await _videoPlayerPlatform.getIsPlaying(_textureId);
+    return _videoPlayerPlatform.getIsPlaying(_textureId);
   }
 
   /// Sets the video's current timestamp to be at [moment]. The next
