@@ -117,14 +117,14 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   @override
   Future<Duration> getDuration(int textureId) async {
     final DurationMessage response =
-    await _api.duration(TextureMessage(textureId: textureId));
+        await _api.duration(TextureMessage(textureId: textureId));
     return Duration(milliseconds: response.duration);
   }
 
   @override
   Future<bool> getIsPlaying(int textureId) async {
     final IsPlayingMessage response =
-    await _api.isPlaying(TextureMessage(textureId: textureId));
+        await _api.isPlaying(TextureMessage(textureId: textureId));
     return response.isPlaying;
   }
 
@@ -188,7 +188,7 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
         maxBufferMs: buffer.maxBufferMs,
         bufferForPlaybackMs: buffer.bufferForPlaybackMs,
         bufferForPlaybackAfterRebufferMs:
-        buffer.bufferForPlaybackAfterRebufferMs,
+            buffer.bufferForPlaybackAfterRebufferMs,
       ),
     );
   }

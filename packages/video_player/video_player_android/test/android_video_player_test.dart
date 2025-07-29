@@ -7,8 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:video_player_android/src/messages.g.dart';
 import 'package:video_player_android/video_player_android.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-
-import '../pigeons/messages.dart';
 import 'test_api.g.dart';
 
 class _ApiLogger implements TestHostVideoPlayerApi {
@@ -20,6 +18,7 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   VolumeMessage? volumeMessage;
   PlaybackSpeedMessage? playbackSpeedMessage;
   MixWithOthersMessage? mixWithOthersMessage;
+  BufferMessage? bufferMessage;
 
   @override
   TextureMessage create(CreateMessage arg) {
@@ -93,6 +92,19 @@ class _ApiLogger implements TestHostVideoPlayerApi {
     log.add('duration');
     textureMessage = arg;
     return DurationMessage(textureId: arg.textureId, duration: 300);
+  }
+
+  @override
+  IsPlayingMessage isPlaying(TextureMessage msg) {
+    log.add('isPlaying');
+    textureMessage = msg;
+    return IsPlayingMessage(textureId: msg.textureId, isPlaying: true);
+  }
+
+  @override
+  void setBuffer(BufferMessage msg) {
+    log.add('setBuffer');
+    bufferMessage = msg;
   }
 }
 
