@@ -8,6 +8,7 @@ import 'package:video_player_android/src/messages.g.dart';
 import 'package:video_player_android/video_player_android.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 
+import '../pigeons/messages.dart';
 import 'test_api.g.dart';
 
 class _ApiLogger implements TestHostVideoPlayerApi {
@@ -85,6 +86,13 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   void setPlaybackSpeed(PlaybackSpeedMessage arg) {
     log.add('setPlaybackSpeed');
     playbackSpeedMessage = arg;
+  }
+
+  @override
+  DurationMessage duration(TextureMessage arg) {
+    log.add('duration');
+    textureMessage = arg;
+    return DurationMessage(textureId: arg.textureId, duration: 300);
   }
 }
 

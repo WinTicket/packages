@@ -378,7 +378,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   Future<ClosedCaptionFile>? _closedCaptionFileFuture;
   ClosedCaptionFile? _closedCaptionFile;
-  Timer? _timer;
+  Timer? _timerForPosition;
+  Timer? _timerForDuration;
   bool _isDisposed = false;
   Completer<void>? _creatingCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
@@ -437,8 +438,22 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           .setMixWithOthers(videoPlayerOptions!.mixWithOthers);
     }
 
+    final Buffer? bufferOption = videoPlayerOptions?.buffer;
+
+    // AndroidはtextureIdが不要。かつcreateの実行前じゃないといけない。
+    if (defaultTargetPlatform == TargetPlatform.android &&
+        bufferOption != null) {
+      await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
+    }
+
     _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
         kUninitializedTextureId;
+
+    // iOSはtextureIdが必要
+    if (defaultTargetPlatform == TargetPlatform.iOS && bufferOption != null) {
+      await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
+    }
+
     _creatingCompleter!.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
 
@@ -479,6 +494,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
+          _applyUpdateDurationPeriodic();
         case VideoEventType.completed:
           // In this case we need to stop _timer, set isPlaying=false, and
           // position=value.duration. Instead of setting the values directly,
@@ -511,7 +527,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     void errorListener(Object obj) {
       final PlatformException e = obj as PlatformException;
       value = VideoPlayerValue.erroneous(e.message!);
-      _timer?.cancel();
+      _timerForPosition?.cancel();
+      _timerForDuration?.cancel();
       if (!initializingCompleter.isCompleted) {
         initializingCompleter.completeError(obj);
       }
@@ -533,7 +550,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _creatingCompleter!.future;
       if (!_isDisposed) {
         _isDisposed = true;
-        _timer?.cancel();
+        _timerForPosition?.cancel();
+        _timerForDuration?.cancel();
         await _eventSubscription?.cancel();
         await _videoPlayerPlatform.dispose(_textureId);
       }
@@ -578,6 +596,28 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setLooping(_textureId, value.isLooping);
   }
 
+  void _applyUpdateDurationPeriodic() {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+    // Cancel previous timer.
+    _timerForDuration?.cancel();
+
+    _timerForDuration = Timer.periodic(
+      const Duration(milliseconds: 500),
+          (Timer timer) async {
+        if (_isDisposed) {
+          return;
+        }
+        final Duration? newDuration = await duration;
+        if (newDuration == null) {
+          return;
+        }
+        value = value.copyWith(duration: newDuration);
+      },
+    );
+  }
+
   Future<void> _applyPlayPause() async {
     if (_isDisposedOrNotInitialized) {
       return;
@@ -586,8 +626,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _videoPlayerPlatform.play(_textureId);
 
       // Cancel previous timer.
-      _timer?.cancel();
-      _timer = Timer.periodic(
+      _timerForPosition?.cancel();
+      _timerForPosition = Timer.periodic(
         const Duration(milliseconds: 500),
         (Timer timer) async {
           if (_isDisposed) {
@@ -606,7 +646,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       // when paused.
       await _applyPlaybackSpeed();
     } else {
-      _timer?.cancel();
+      _timerForPosition?.cancel();
       await _videoPlayerPlatform.pause(_textureId);
     }
   }
@@ -642,6 +682,22 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return null;
     }
     return _videoPlayerPlatform.getPosition(_textureId);
+  }
+
+  /// The duration in the current video.
+  Future<Duration?> get duration async {
+    if (_isDisposed) {
+      return null;
+    }
+    return await _videoPlayerPlatform.getDuration(_textureId);
+  }
+
+  /// Get latest isPlaying status from ExoPlayer/AVPlayer
+  Future<bool> get isPlaying async {
+    if (_isDisposed) {
+      return false;
+    }
+    return await _videoPlayerPlatform.getIsPlaying(_textureId);
   }
 
   /// Sets the video's current timestamp to be at [moment]. The next
