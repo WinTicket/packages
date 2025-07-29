@@ -14,6 +14,10 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class FVPCreationOptions;
+@class FVPDurationMessage;
+@class FVPStartMessage;
+@class FVPBufferMessage;
+@class FVPIsPlayingMessage;
 
 @interface FVPCreationOptions : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
@@ -30,6 +34,42 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy) NSDictionary<NSString *, NSString *> * httpHeaders;
 @end
 
+@interface FVPDurationMessage : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithTextureId:(NSInteger )textureId
+    duration:(NSInteger )duration;
+@property(nonatomic, assign) NSInteger  textureId;
+@property(nonatomic, assign) NSInteger  duration;
+@end
+
+@interface FVPStartMessage : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithTextureId:(NSInteger )textureId
+    start:(NSInteger )start;
+@property(nonatomic, assign) NSInteger  textureId;
+@property(nonatomic, assign) NSInteger  start;
+@end
+
+@interface FVPBufferMessage : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithTextureId:(NSInteger )textureId
+    second:(NSInteger )second;
+@property(nonatomic, assign) NSInteger  textureId;
+@property(nonatomic, assign) NSInteger  second;
+@end
+
+@interface FVPIsPlayingMessage : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithTextureId:(NSInteger )textureId
+    isPlaying:(BOOL )isPlaying;
+@property(nonatomic, assign) NSInteger  textureId;
+@property(nonatomic, assign) BOOL  isPlaying;
+@end
+
 /// The codec used by all APIs.
 NSObject<FlutterMessageCodec> *FVPGetMessagesCodec(void);
 
@@ -44,9 +84,16 @@ NSObject<FlutterMessageCodec> *FVPGetMessagesCodec(void);
 - (void)playPlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
 /// @return `nil` only when `error != nil`.
 - (nullable NSNumber *)positionForPlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
+/// @return `nil` only when `error != nil`.
+- (nullable FVPDurationMessage *)durationForPlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
+/// @return `nil` only when `error != nil`.
+- (nullable FVPStartMessage *)startForPlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)seekTo:(NSInteger)position forPlayer:(NSInteger)textureId completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)pausePlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setMixWithOthers:(BOOL)mixWithOthers error:(FlutterError *_Nullable *_Nonnull)error;
+- (void)setBuffer:(FVPBufferMessage *)msg error:(FlutterError *_Nullable *_Nonnull)error;
+/// @return `nil` only when `error != nil`.
+- (nullable FVPIsPlayingMessage *)isPlaying:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
 @end
 
 extern void SetUpFVPAVFoundationVideoPlayerApi(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FVPAVFoundationVideoPlayerApi> *_Nullable api);

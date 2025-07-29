@@ -89,8 +89,13 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> seekTo(int textureId, Duration position) {
-    return _api.seekTo(position.inMilliseconds, textureId);
+  Future<void> seekTo(int textureId, Duration position) async {
+    final StartMessage startResponse = await _api.start(textureId);
+    final Duration startDuration = Duration(milliseconds: startResponse.start);
+    return _api.seekTo(
+      position.inMilliseconds + startDuration.inMilliseconds,
+      textureId,
+    );
   }
 
   @override

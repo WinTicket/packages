@@ -337,7 +337,12 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       for (NSValue *rangeValue in [object loadedTimeRanges]) {
         CMTimeRange range = [rangeValue CMTimeRangeValue];
         int64_t start = FVPCMTimeToMillis(range.start);
-        [values addObject:@[ @(start), @(start + FVPCMTimeToMillis(range.duration)) ]];
+        int64_t durationStartAt = [self durationStartAt];
+        // Androidを合わせる形で対応
+        // iOSはライブ配信を開始した時間を元に計算してる
+        // positionに対してbufferが行われている範囲を追加する
+        // See Also: https://github.com/WinTicket/ios/blob/f81dc5e5c77cfb2e102277b1ebf5f3395ceda004/WinTicket/Sources/Components/Video/VideoState.swift#L313
+        [values addObject:@[ @(start - durationStartAt), @(start + FLTCMTimeToMillis(range.duration) - durationStartAt) ]];
       }
       _eventSink(@{@"event" : @"bufferingUpdate", @"values" : values});
     }
@@ -470,11 +475,40 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   return FVPCMTimeToMillis([_player currentTime]);
 }
 
+- (void)setBuffer:(double)buffer {
+    AVPlayerItem *currentItem = self.player.currentItem;
+    currentItem.preferredForwardBufferDuration = buffer;
+}
+
+- (BOOL)getLatestIsPlaying {
+    return _player.rate > 0;
+}
+
 - (int64_t)duration {
-  // Note: https://openradar.appspot.com/radar?id=4968600712511488
-  // `[AVPlayerItem duration]` can be `kCMTimeIndefinite`,
-  // use `[[AVPlayerItem asset] duration]` instead.
-  return FVPCMTimeToMillis([[[_player currentItem] asset] duration]);
+    // AndroidのDurationはライブ配信と過去動画でいい感じに数字を返してくれるが
+    // iOSでは
+    // - ライブ配信: seekableTimeRanges
+    // - mp4の動画: duration
+    // を利用する必要がある。seekableTimeRangesが有無で条件分岐する
+    NSValue *seekableRange = _player.currentItem.seekableTimeRanges.lastObject;
+    if (seekableRange) {
+        CMTimeRange seekableDuration = [seekableRange CMTimeRangeValue];
+        return FLTCMTimeToMillis(seekableDuration.duration);
+    }
+    else {
+        return FLTCMTimeToMillis(_player.currentItem.asset.duration);
+    }
+}
+
+- (int64_t)durationStartAt {
+    NSValue *seekableRange = _player.currentItem.seekableTimeRanges.lastObject;
+    if (seekableRange) {
+        CMTimeRange seekableDuration = [seekableRange CMTimeRangeValue];
+        return FLTCMTimeToMillis(seekableDuration.start);
+    }
+    else {
+        return FLTCMTimeToMillis(_player.currentItem.asset.duration);
+    }
 }
 
 - (void)seekTo:(int64_t)location completionHandler:(void (^)(BOOL))completionHandler {
@@ -796,6 +830,30 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   return @([player position]);
 }
 
+- (FLTDurationMessage *)durationForPlayer:(FLTTextureMessage *)input error:(FlutterError **)error {
+    FLTVideoPlayer *player = self.playersByTextureId[input.textureId];
+    FLTDurationMessage *result = [FLTDurationMessage makeWithTextureId:input.textureId
+                                                              duration:@([player duration])];
+    return result;
+}
+
+- (FLTStartMessage *)startForPlayer:(FLTTextureMessage *)input error:(FlutterError **)error {
+    FLTVideoPlayer *player = self.playersByTextureId[input.textureId];
+    FLTStartMessage *result = [FLTStartMessage makeWithTextureId:input.textureId
+                                                           start:@([player durationStartAt])];
+    return result;
+}
+
+- (void)seekTo:(FLTPositionMessage *)msg completion:(void(^)(FlutterError *_Nullable))completion {
+    FLTVideoPlayer *player = self.playersByTextureId[msg.textureId];
+    [player seekTo:msg.position.intValue completionHandler:^(BOOL isFinished) {
+        if (completion) {
+            completion(nil);
+        }
+    }];
+    [self.registry textureFrameAvailable:msg.textureId.intValue];
+}
+
 - (void)seekTo:(NSInteger)position
      forPlayer:(NSInteger)textureId
     completion:(nonnull void (^)(FlutterError *_Nullable))completion {
@@ -826,6 +884,18 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
   }
 #endif
+}
+
+- (void)setBuffer:(FLTBufferMessage *)input error:(FlutterError *_Nullable *_Nonnull)error {
+    FLTVideoPlayer *player = self.playersByTextureId[input.textureId];
+    [player setBuffer:input.second.doubleValue];
+}
+
+- (FLTIsPlayingMessage *)isPlaying:(FLTTextureMessage *)input error:(FlutterError **)error {
+    FLTVideoPlayer *player = self.playersByTextureId[input.textureId];
+    FLTIsPlayingMessage *result = [FLTIsPlayingMessage makeWithTextureId:input.textureId
+                                                               isPlaying:@([player getLatestIsPlaying])];
+    return result;
 }
 
 @end

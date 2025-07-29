@@ -26,6 +26,30 @@ class CreationOptions {
   Map<String, String> httpHeaders;
 }
 
+class DurationMessage {
+  DurationMessage(this.textureId, this.duration);
+  int textureId;
+  int duration;
+}
+
+class StartMessage {
+  StartMessage(this.textureId, this.start);
+  int textureId;
+  int start;
+}
+
+class BufferMessage {
+  BufferMessage(this.textureId, this.second);
+  int textureId;
+  int second;
+}
+
+class IsPlayingMessage {
+  IsPlayingMessage(this.textureId, this.isPlaying);
+  int textureId;
+  bool isPlaying;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AVFoundationVideoPlayerApi {
   @ObjCSelector('initialize')
@@ -45,6 +69,10 @@ abstract class AVFoundationVideoPlayerApi {
   void play(int textureId);
   @ObjCSelector('positionForPlayer:')
   int getPosition(int textureId);
+  @ObjCSelector('durationForPlayer:')
+  DurationMessage duration(int textureId);
+  @ObjCSelector('startForPlayer:')
+  StartMessage start(int textureId);
   @async
   @ObjCSelector('seekTo:forPlayer:')
   void seekTo(int position, int textureId);
@@ -52,4 +80,8 @@ abstract class AVFoundationVideoPlayerApi {
   void pause(int textureId);
   @ObjCSelector('setMixWithOthers:')
   void setMixWithOthers(bool mixWithOthers);
+  @ObjCSelector('setBuffer:')
+  void setBuffer(BufferMessage msg);
+  @ObjCSelector('isPlaying:')
+  IsPlayingMessage isPlaying(int textureId);
 }

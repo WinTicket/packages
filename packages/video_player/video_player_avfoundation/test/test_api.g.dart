@@ -24,6 +24,18 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is CreationOptions) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
+    }    else if (value is DurationMessage) {
+      buffer.putUint8(130);
+      writeValue(buffer, value.encode());
+    }    else if (value is StartMessage) {
+      buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    }    else if (value is BufferMessage) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.encode());
+    }    else if (value is IsPlayingMessage) {
+      buffer.putUint8(133);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -34,6 +46,14 @@ class _PigeonCodec extends StandardMessageCodec {
     switch (type) {
       case 129: 
         return CreationOptions.decode(readValue(buffer)!);
+      case 130: 
+        return DurationMessage.decode(readValue(buffer)!);
+      case 131: 
+        return StartMessage.decode(readValue(buffer)!);
+      case 132: 
+        return BufferMessage.decode(readValue(buffer)!);
+      case 133: 
+        return IsPlayingMessage.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -60,11 +80,19 @@ abstract class TestHostVideoPlayerApi {
 
   int getPosition(int textureId);
 
+  DurationMessage duration(int textureId);
+
+  StartMessage start(int textureId);
+
   Future<void> seekTo(int position, int textureId);
 
   void pause(int textureId);
 
   void setMixWithOthers(bool mixWithOthers);
+
+  void setBuffer(BufferMessage msg);
+
+  IsPlayingMessage isPlaying(int textureId);
 
   static void setUp(TestHostVideoPlayerApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
@@ -273,6 +301,56 @@ abstract class TestHostVideoPlayerApi {
     }
     {
       final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.duration$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, null);
+      } else {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, (Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.duration was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final int? arg_textureId = (args[0] as int?);
+          assert(arg_textureId != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.duration was null, expected non-null int.');
+          try {
+            final DurationMessage output = api.duration(arg_textureId!);
+            return <Object?>[output];
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.start$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, null);
+      } else {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, (Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.start was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final int? arg_textureId = (args[0] as int?);
+          assert(arg_textureId != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.start was null, expected non-null int.');
+          try {
+            final StartMessage output = api.start(arg_textureId!);
+            return <Object?>[output];
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
           'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.seekTo$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
@@ -341,6 +419,56 @@ abstract class TestHostVideoPlayerApi {
           try {
             api.setMixWithOthers(arg_mixWithOthers!);
             return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, null);
+      } else {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, (Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final BufferMessage? arg_msg = (args[0] as BufferMessage?);
+          assert(arg_msg != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer was null, expected non-null BufferMessage.');
+          try {
+            api.setBuffer(arg_msg!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.isPlaying$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, null);
+      } else {
+        _testBinaryMessengerBinding!.defaultBinaryMessenger.setMockDecodedMessageHandler<Object?>(pigeonVar_channel, (Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.isPlaying was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final int? arg_textureId = (args[0] as int?);
+          assert(arg_textureId != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.isPlaying was null, expected non-null int.');
+          try {
+            final IsPlayingMessage output = api.isPlaying(arg_textureId!);
+            return <Object?>[output];
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
           }          catch (e) {
