@@ -4,9 +4,14 @@
 
 package io.flutter.plugins.videoplayer;
 
+import static java.lang.Math.toIntExact;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.LongSparseArray;
 import androidx.annotation.NonNull;
+import androidx.media3.exoplayer.DefaultLoadControl;
+
 import io.flutter.FlutterInjector;
 import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -174,6 +179,15 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     return position;
   }
 
+  @NonNull
+  @Override
+  public Long duration(@NonNull Long textureId) {
+    VideoPlayer player = getPlayer(textureId);
+    long duration = player.getDuration();
+    player.sendBufferingUpdate();
+    return duration;
+  }
+
   @Override
   public void seekTo(@NonNull Long textureId, @NonNull Long position) {
     VideoPlayer player = getPlayer(textureId);
@@ -189,6 +203,32 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
   @Override
   public void setMixWithOthers(@NonNull Boolean mixWithOthers) {
     options.mixWithOthers = mixWithOthers;
+  }
+
+  @SuppressLint("UnsafeOptInUsageError")
+  @Override
+  public void setBuffer(@NonNull Messages.BufferMessage msg) {
+    VideoPlayerBuffer buffer = new VideoPlayerBuffer();
+    buffer.minBufferMs = (msg.getMinBufferMs() == null)
+            ? DefaultLoadControl.DEFAULT_MIN_BUFFER_MS
+            : toIntExact(msg.getMinBufferMs());
+    buffer.maxBufferMs = (msg.getMaxBufferMs() == null)
+            ? DefaultLoadControl.DEFAULT_MAX_BUFFER_MS
+            : toIntExact(msg.getMaxBufferMs());
+    buffer.bufferForPlaybackMs = (msg.getBufferForPlaybackMs() == null)
+            ? DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS
+            : toIntExact(msg.getBufferForPlaybackMs());
+    buffer.bufferForPlaybackAfterRebufferMs = (msg.getBufferForPlaybackAfterRebufferMs() == null)
+            ? DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+            : toIntExact(msg.getBufferForPlaybackAfterRebufferMs());
+    options.buffer = buffer;
+  }
+
+  @NonNull
+  @Override
+  public Boolean isPlaying(@NonNull Long textureId) {
+    VideoPlayer player = getPlayer(textureId);
+    return player.getIsPlaying();
   }
 
   private interface KeyForAssetFn {

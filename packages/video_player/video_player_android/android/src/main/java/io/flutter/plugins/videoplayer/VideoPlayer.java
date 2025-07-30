@@ -7,6 +7,7 @@ package io.flutter.plugins.videoplayer;
 import static androidx.media3.common.Player.REPEAT_MODE_ALL;
 import static androidx.media3.common.Player.REPEAT_MODE_OFF;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,11 +17,12 @@ import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackParameters;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import io.flutter.view.TextureRegistry;
 
 final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
-  @NonNull private final ExoPlayerProvider exoPlayerProvider;
+  @NonNull private final ExoPlayerBuilderProvider exoPlayerProvider;
   @NonNull private final MediaItem mediaItem;
   @NonNull private final TextureRegistry.SurfaceProducer surfaceProducer;
   @NonNull private final VideoPlayerCallbacks videoPlayerEvents;
@@ -46,12 +48,8 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
       @NonNull VideoAsset asset,
       @NonNull VideoPlayerOptions options) {
     return new VideoPlayer(
-        () -> {
-          ExoPlayer.Builder builder =
-              new ExoPlayer.Builder(context)
-                  .setMediaSourceFactory(asset.getMediaSourceFactory(context));
-          return builder.build();
-        },
+        () -> new ExoPlayer.Builder(context)
+                 .setMediaSourceFactory(asset.getMediaSourceFactory(context)),
         events,
         surfaceProducer,
         asset.getMediaItem(),
@@ -59,18 +57,18 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
   }
 
   /** A closure-compatible signature since {@link java.util.function.Supplier} is API level 24. */
-  interface ExoPlayerProvider {
+  interface ExoPlayerBuilderProvider {
     /**
-     * Returns a new {@link ExoPlayer}.
+     * Returns a new {@link ExoPlayer.Builder}.
      *
      * @return new instance.
      */
-    ExoPlayer get();
+    ExoPlayer.Builder get();
   }
 
   @VisibleForTesting
   VideoPlayer(
-      @NonNull ExoPlayerProvider exoPlayerProvider,
+      @NonNull ExoPlayerBuilderProvider exoPlayerProvider,
       @NonNull VideoPlayerCallbacks events,
       @NonNull TextureRegistry.SurfaceProducer surfaceProducer,
       @NonNull MediaItem mediaItem,
@@ -103,8 +101,21 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
     exoPlayer.release();
   }
 
+  @SuppressLint("UnsafeOptInUsageError")
   private ExoPlayer createVideoPlayer() {
-    ExoPlayer exoPlayer = exoPlayerProvider.get();
+    ExoPlayer.Builder exoPlayerBuilder = exoPlayerProvider.get();
+    if (options.buffer != null) {
+        DefaultLoadControl.Builder defaultLoadControlBuilder = new DefaultLoadControl.Builder();
+        defaultLoadControlBuilder.setBufferDurationsMs(
+                options.buffer.minBufferMs,
+                options.buffer.maxBufferMs,
+                options.buffer.bufferForPlaybackMs,
+                options.buffer.bufferForPlaybackAfterRebufferMs
+        );
+        exoPlayerBuilder.setLoadControl(defaultLoadControlBuilder.build());
+    }
+
+    ExoPlayer exoPlayer = exoPlayerBuilder.build();
     exoPlayer.setMediaItem(mediaItem);
     exoPlayer.prepare();
 
@@ -158,6 +169,14 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
 
   long getPosition() {
     return exoPlayer.getCurrentPosition();
+  }
+
+  long getDuration() {
+    return exoPlayer.getDuration();
+  }
+
+  boolean getIsPlaying() {
+    return exoPlayer.isPlaying();
   }
 
   void dispose() {
