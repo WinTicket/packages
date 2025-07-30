@@ -22,6 +22,13 @@ class CreateMessage {
   Map<String, String> httpHeaders;
 }
 
+class BufferMessage {
+  int? minBufferMs;
+  int? maxBufferMs;
+  int? bufferForPlaybackMs;
+  int? bufferForPlaybackAfterRebufferMs;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AndroidVideoPlayerApi {
   void initialize();
@@ -32,7 +39,10 @@ abstract class AndroidVideoPlayerApi {
   void setPlaybackSpeed(int textureId, double speed);
   void play(int textureId);
   int position(int textureId);
+  int duration(int textureId);
   void seekTo(int textureId, int position);
   void pause(int textureId);
   void setMixWithOthers(bool mixWithOthers);
+  void setBuffer(BufferMessage msg);
+  bool isPlaying(int textureId);
 }

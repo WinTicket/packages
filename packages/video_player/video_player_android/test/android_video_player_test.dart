@@ -64,6 +64,13 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   }
 
   @override
+  int duration(int textureId) {
+    log.add('duration');
+    passedTextureId = textureId;
+    return 456;
+  }
+
+  @override
   void seekTo(int textureId, int position) {
     log.add('seekTo');
     passedTextureId = textureId;
@@ -89,6 +96,19 @@ class _ApiLogger implements TestHostVideoPlayerApi {
     log.add('setPlaybackSpeed');
     passedTextureId = textureId;
     passedPlaybackSpeed = speed;
+  }
+
+  @override
+  void setBuffer(BufferMessage msg) {
+    log.add('setBuffer');
+    // This method is not used in the tests, so we don't need to implement it.
+  }
+
+  @override
+  bool isPlaying(int textureId) {
+    log.add('isPlaying');
+    passedTextureId = textureId;
+    return true; // Default return value for testing purposes.
   }
 }
 
