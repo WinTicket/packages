@@ -91,6 +91,34 @@ class _ApiLogger implements TestHostVideoPlayerApi {
     playbackSpeed = speed;
     this.playerId = playerId;
   }
+
+  @override
+  int duration(int playerId) {
+    log.add('duration');
+    this.playerId = playerId;
+    return 123456;
+  }
+
+  @override
+  bool isPlaying(int playerId) {
+    log.add('playingForPlayer');
+    this.playerId = playerId;
+    return true; // Simulating that the player is playing.
+  }
+
+  @override
+  void setBuffer(int second, int playerId) {
+    log.add('setBufferSec');
+    this.playerId = playerId;
+    // This method is not implemented in the original code, so we just log it.
+  }
+
+  @override
+  int start(int playerId) {
+    log.add('startForPlayer');
+    this.playerId = playerId;
+    return 0; // Simulating a start time of 0.
+  }
 }
 
 void main() {

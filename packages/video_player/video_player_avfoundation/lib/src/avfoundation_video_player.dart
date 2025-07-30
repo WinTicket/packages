@@ -124,14 +124,32 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> seekTo(int playerId, Duration position) {
-    return _api.seekTo(position.inMilliseconds, playerId);
+  Future<void> seekTo(int playerId, Duration position) async {
+    final int start = await _api.start(playerId);
+    // MEMO: マイナス値を返すと再生側がおかしくなるのでDuration.zeroを返す
+    final int result = position.inMilliseconds - start;
+    if (result < 0) {
+      return _api.seekTo(0, playerId);
+    }
+    return _api.seekTo(result, playerId);
   }
 
   @override
   Future<Duration> getPosition(int playerId) async {
     final int position = await _api.getPosition(playerId);
-    return Duration(milliseconds: position);
+    final int start = await _api.start(playerId);
+    // MEMO: マイナス値を返すと再生側がおかしくなるのでDuration.zeroを返す
+    final int result = position - start;
+    if (result < 0) {
+      return Duration.zero;
+    }
+    return Duration(milliseconds: result);
+  }
+
+  @override
+  Future<Duration> getDuration(int playerId) async {
+    final int duration = await _api.duration(playerId);
+    return Duration(milliseconds: duration);
   }
 
   @override
@@ -177,6 +195,21 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   @override
   Future<void> setMixWithOthers(bool mixWithOthers) {
     return _api.setMixWithOthers(mixWithOthers);
+  }
+
+  @override
+  Future<void> setBuffer(int playerId, Buffer buffer) async {
+    if (buffer.maxBufferMs == null) {
+      return Future<void>.value();
+    }
+    // maxBufferMsはミリ秒なので秒に変換する
+    final int second = buffer.maxBufferMs! ~/ 1000;
+    return _api.setBuffer(second, playerId);
+  }
+
+  @override
+  Future<bool> getIsPlaying(int playerId) async {
+    return _api.isPlaying(playerId);
   }
 
   @override
