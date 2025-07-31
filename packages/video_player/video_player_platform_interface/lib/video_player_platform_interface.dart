@@ -189,6 +189,54 @@ class Buffer {
   final int? bufferForPlaybackAfterRebufferMs;
 }
 
+class Buffer {
+  /// Constructs an instance of [Buffer].
+  ///
+  /// The [minBufferMs] argument can be null.
+  ///
+  /// The [maxBufferMs] argument can be null.
+  ///
+  /// The [bufferForPlaybackMs] argument can be null.
+  ///
+  /// The [bufferForPlaybackAfterRebufferMs] argument can be null.
+  Buffer({
+    this.minBufferMs,
+    this.maxBufferMs,
+    this.bufferForPlaybackMs,
+    this.bufferForPlaybackAfterRebufferMs,
+  });
+
+  /// This value is only used in Android.
+  /// The default minimum duration of media that the player will attempt to
+  /// ensure is buffered at all times, in milliseconds.
+  final int? minBufferMs;
+
+  /// For Android
+  /// The default maximum duration of media that the player will attempt to
+  /// buffer, in milliseconds.
+  ///
+  /// For iOS
+  /// This property defines the preferred forward buffer duration in seconds.
+  /// If set to 0, the player will choose an appropriate level of buffering for
+  /// most use cases.
+  /// Setting this property to a low value will increase the chance that
+  /// playback will stall and re-buffer, while setting it to a high value will
+  /// increase demand on system resources.
+  final int? maxBufferMs;
+
+  /// This value is only used in Android.
+  /// The default duration of media that must be buffered for playback to start
+  /// or resume following a user action such as a seek, in milliseconds.
+  final int? bufferForPlaybackMs;
+
+  /// This value is only used in Android.
+  /// The default duration of media that must be buffered for playback to
+  /// resume after a rebuffer, in milliseconds.
+  /// A rebuffer is defined to be caused by buffer depletion rather than a
+  /// user action.
+  final int? bufferForPlaybackAfterRebufferMs;
+}
+
 class _PlaceholderImplementation extends VideoPlayerPlatform {}
 
 /// Description of the data source used to create an instance of
@@ -490,6 +538,10 @@ class VideoPlayerOptions {
 
   /// Additional web controls
   final VideoPlayerWebOptions? webOptions;
+
+  /// AndroidとiOSでバッファの値を調整するためにセットします
+  /// nullの場合は各プラットフォームのPlayerのデフォルトの値が使われます
+  final Buffer? buffer;
 }
 
 /// [VideoPlayerWebOptions] can be optionally used to set additional web settings

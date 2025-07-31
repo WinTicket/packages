@@ -14,12 +14,13 @@ import 'src/closed_caption_file.dart';
 
 export 'package:video_player_platform_interface/video_player_platform_interface.dart'
     show
-        DataSourceType,
-        DurationRange,
-        VideoFormat,
-        VideoPlayerOptions,
-        VideoPlayerWebOptions,
-        VideoPlayerWebOptionsControls;
+    DataSourceType,
+    DurationRange,
+    VideoFormat,
+    VideoPlayerOptions,
+    VideoPlayerWebOptions,
+    VideoPlayerWebOptionsControls,
+    Buffer;
 
 export 'src/closed_caption_file.dart';
 
@@ -67,9 +68,9 @@ class VideoPlayerValue {
   /// Returns an instance with the given [errorDescription].
   const VideoPlayerValue.erroneous(String errorDescription)
       : this(
-            duration: Duration.zero,
-            isInitialized: false,
-            errorDescription: errorDescription);
+      duration: Duration.zero,
+      isInitialized: false,
+      errorDescription: errorDescription);
 
   /// This constant is just to indicate that parameter is not passed to [copyWith]
   /// workaround for this issue https://github.com/dart-lang/language/issues/2009
@@ -215,26 +216,27 @@ class VideoPlayerValue {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is VideoPlayerValue &&
-          runtimeType == other.runtimeType &&
-          duration == other.duration &&
-          position == other.position &&
-          caption == other.caption &&
-          captionOffset == other.captionOffset &&
-          listEquals(buffered, other.buffered) &&
-          isPlaying == other.isPlaying &&
-          isLooping == other.isLooping &&
-          isBuffering == other.isBuffering &&
-          volume == other.volume &&
-          playbackSpeed == other.playbackSpeed &&
-          errorDescription == other.errorDescription &&
-          size == other.size &&
-          rotationCorrection == other.rotationCorrection &&
-          isInitialized == other.isInitialized &&
-          isCompleted == other.isCompleted;
+          other is VideoPlayerValue &&
+              runtimeType == other.runtimeType &&
+              duration == other.duration &&
+              position == other.position &&
+              caption == other.caption &&
+              captionOffset == other.captionOffset &&
+              listEquals(buffered, other.buffered) &&
+              isPlaying == other.isPlaying &&
+              isLooping == other.isLooping &&
+              isBuffering == other.isBuffering &&
+              volume == other.volume &&
+              playbackSpeed == other.playbackSpeed &&
+              errorDescription == other.errorDescription &&
+              size == other.size &&
+              rotationCorrection == other.rotationCorrection &&
+              isInitialized == other.isInitialized &&
+              isCompleted == other.isCompleted;
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode =>
+      Object.hash(
         duration,
         position,
         caption,
@@ -271,8 +273,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// package and null otherwise.
   VideoPlayerController.asset(this.dataSource,
       {this.package,
-      Future<ClosedCaptionFile>? closedCaptionFile,
-      this.videoPlayerOptions})
+        Future<ClosedCaptionFile>? closedCaptionFile,
+        this.videoPlayerOptions})
       : _closedCaptionFileFuture = closedCaptionFile,
         dataSourceType = DataSourceType.asset,
         formatHint = null,
@@ -289,13 +291,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// [httpHeaders] option allows to specify HTTP headers
   /// for the request to the [dataSource].
   @Deprecated('Use VideoPlayerController.networkUrl instead')
-  VideoPlayerController.network(
-    this.dataSource, {
+  VideoPlayerController.network(this.dataSource, {
     this.formatHint,
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
     this.httpHeaders = const <String, String>{},
-  })  : _closedCaptionFileFuture = closedCaptionFile,
+  })
+      : _closedCaptionFileFuture = closedCaptionFile,
         dataSourceType = DataSourceType.network,
         package = null,
         super(const VideoPlayerValue(duration: Duration.zero));
@@ -309,13 +311,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   ///
   /// [httpHeaders] option allows to specify HTTP headers
   /// for the request to the [dataSource].
-  VideoPlayerController.networkUrl(
-    Uri url, {
+  VideoPlayerController.networkUrl(Uri url, {
     this.formatHint,
     Future<ClosedCaptionFile>? closedCaptionFile,
     this.videoPlayerOptions,
     this.httpHeaders = const <String, String>{},
-  })  : _closedCaptionFileFuture = closedCaptionFile,
+  })
+      : _closedCaptionFileFuture = closedCaptionFile,
         dataSource = url.toString(),
         dataSourceType = DataSourceType.network,
         package = null,
@@ -327,8 +329,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// [httpHeaders] option allows to specify HTTP headers, mainly used for hls files like (m3u8).
   VideoPlayerController.file(File file,
       {Future<ClosedCaptionFile>? closedCaptionFile,
-      this.videoPlayerOptions,
-      this.httpHeaders = const <String, String>{}})
+        this.videoPlayerOptions,
+        this.httpHeaders = const <String, String>{}})
       : _closedCaptionFileFuture = closedCaptionFile,
         dataSource = Uri.file(file.absolute.path).toString(),
         dataSourceType = DataSourceType.file,
@@ -343,7 +345,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   VideoPlayerController.contentUri(Uri contentUri,
       {Future<ClosedCaptionFile>? closedCaptionFile, this.videoPlayerOptions})
       : assert(defaultTargetPlatform == TargetPlatform.android,
-            'VideoPlayerController.contentUri is only supported on Android.'),
+  'VideoPlayerController.contentUri is only supported on Android.'),
         _closedCaptionFileFuture = closedCaptionFile,
         dataSource = contentUri.toString(),
         dataSourceType = DataSourceType.contentUri,
@@ -377,7 +379,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
   Future<ClosedCaptionFile>? _closedCaptionFileFuture;
   ClosedCaptionFile? _closedCaptionFile;
-  Timer? _timer;
+  Timer? _timerForPosition;
+  Timer? _timerForDuration;
   bool _isDisposed = false;
   Completer<void>? _creatingCompleter;
   StreamSubscription<dynamic>? _eventSubscription;
@@ -436,8 +439,20 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           .setMixWithOthers(videoPlayerOptions!.mixWithOthers);
     }
 
+    final Buffer? bufferOption = videoPlayerOptions?.buffer;
+
+    // AndroidはtextureIdが不要。かつcreateの実行前じゃないといけない。
+    if (defaultTargetPlatform == TargetPlatform.android &&
+        bufferOption != null) {
+      await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
+    }
+
     _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
         kUninitializedTextureId;
+    // iOSはtextureIdが必要
+    if (defaultTargetPlatform == TargetPlatform.iOS && bufferOption != null) {
+      await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
+    }
     _creatingCompleter!.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
 
@@ -465,11 +480,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             isCompleted: false,
           );
           assert(
-            !initializingCompleter.isCompleted,
-            'VideoPlayerController already initialized. This is typically a '
-            'sign that an implementation of the VideoPlayerPlatform '
-            '(${_videoPlayerPlatform.runtimeType}) has a bug and is sending '
-            'more than one initialized event per instance.',
+          !initializingCompleter.isCompleted,
+          'VideoPlayerController already initialized. This is typically a '
+              'sign that an implementation of the VideoPlayerPlatform '
+              '(${_videoPlayerPlatform.runtimeType}) has a bug and is sending '
+              'more than one initialized event per instance.',
           );
           if (initializingCompleter.isCompleted) {
             throw StateError('VideoPlayerController already initialized');
@@ -478,11 +493,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyLooping();
           _applyVolume();
           _applyPlayPause();
+          _applyUpdateDurationPeriodic();
         case VideoEventType.completed:
-          // In this case we need to stop _timer, set isPlaying=false, and
-          // position=value.duration. Instead of setting the values directly,
-          // we use pause() and seekTo() to ensure the platform stops playing
-          // and seeks to the last frame of the video.
+        // In this case we need to stop _timer, set isPlaying=false, and
+        // position=value.duration. Instead of setting the values directly,
+        // we use pause() and seekTo() to ensure the platform stops playing
+        // and seeks to the last frame of the video.
           pause().then((void pauseResult) => seekTo(value.duration));
           value = value.copyWith(isCompleted: true);
         case VideoEventType.bufferingUpdate:
@@ -510,7 +526,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     void errorListener(Object obj) {
       final PlatformException e = obj as PlatformException;
       value = VideoPlayerValue.erroneous(e.message!);
-      _timer?.cancel();
+      _timerForPosition?.cancel();
+      _timerForDuration?.cancel();
       if (!initializingCompleter.isCompleted) {
         initializingCompleter.completeError(obj);
       }
@@ -532,7 +549,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _creatingCompleter!.future;
       if (!_isDisposed) {
         _isDisposed = true;
-        _timer?.cancel();
+        _timerForPosition?.cancel();
+        _timerForDuration?.cancel();
         await _eventSubscription?.cancel();
         await _videoPlayerPlatform.dispose(_textureId);
       }
@@ -577,6 +595,28 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _videoPlayerPlatform.setLooping(_textureId, value.isLooping);
   }
 
+  void _applyUpdateDurationPeriodic() {
+    if (_isDisposedOrNotInitialized) {
+      return;
+    }
+    // Cancel previous timer.
+    _timerForDuration?.cancel();
+
+    _timerForDuration = Timer.periodic(
+      const Duration(milliseconds: 500),
+          (Timer timer) async {
+        if (_isDisposed) {
+          return;
+        }
+        final Duration? newDuration = await duration;
+        if (newDuration == null) {
+          return;
+        }
+        value = value.copyWith(duration: newDuration);
+      },
+    );
+  }
+
   Future<void> _applyPlayPause() async {
     if (_isDisposedOrNotInitialized) {
       return;
@@ -584,8 +624,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (value.isPlaying) {
       await _videoPlayerPlatform.play(_textureId);
 
-      _timer?.cancel();
-      _timer = Timer.periodic(
+      _timerForPosition?.cancel();
+      _timerForPosition = Timer.periodic(
         const Duration(milliseconds: 100),
         (Timer timer) async {
           if (_isDisposed) {
@@ -604,7 +644,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       // when paused.
       await _applyPlaybackSpeed();
     } else {
-      _timer?.cancel();
+      _timerForPosition?.cancel();
       await _videoPlayerPlatform.pause(_textureId);
     }
   }
@@ -640,6 +680,22 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return null;
     }
     return _videoPlayerPlatform.getPosition(_textureId);
+  }
+
+  /// The duration in the current video.
+  Future<Duration?> get duration async {
+    if (_isDisposed) {
+      return null;
+    }
+    return _videoPlayerPlatform.getDuration(_textureId);
+  }
+
+  /// Get latest isPlaying status from ExoPlayer/AVPlayer
+  Future<bool> get isPlaying async {
+    if (_isDisposed) {
+      return false;
+    }
+    return _videoPlayerPlatform.getIsPlaying(_textureId);
   }
 
   /// Sets the video's current timestamp to be at [moment]. The next
@@ -751,15 +807,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   ///
   /// If [closedCaptionFile] is null, closed captions will be removed.
   Future<void> setClosedCaptionFile(
-    Future<ClosedCaptionFile>? closedCaptionFile,
-  ) async {
+      Future<ClosedCaptionFile>? closedCaptionFile,) async {
     await _updateClosedCaptionWithFuture(closedCaptionFile);
     _closedCaptionFileFuture = closedCaptionFile;
   }
 
   Future<void> _updateClosedCaptionWithFuture(
-    Future<ClosedCaptionFile>? closedCaptionFile,
-  ) async {
+      Future<ClosedCaptionFile>? closedCaptionFile,) async {
     _closedCaptionFile = await closedCaptionFile;
     value = value.copyWith(caption: _getCaptionAt(value.position));
   }
@@ -874,9 +928,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
     return _textureId == VideoPlayerController.kUninitializedTextureId
         ? Container()
         : _VideoPlayerWithRotation(
-            rotation: widget.controller.value.rotationCorrection,
-            child: _videoPlayerPlatform.buildView(_textureId),
-          );
+      rotation: widget.controller.value.rotationCorrection,
+      child: _videoPlayerPlatform.buildView(_textureId),
+    );
   }
 }
 
@@ -1024,8 +1078,7 @@ class VideoProgressIndicator extends StatefulWidget {
   /// Defaults will be used for everything except [controller] if they're not
   /// provided. [allowScrubbing] defaults to false, and [padding] will default
   /// to `top: 5.0`.
-  const VideoProgressIndicator(
-    this.controller, {
+  const VideoProgressIndicator(this.controller, {
     super.key,
     this.colors = const VideoProgressColors(),
     required this.allowScrubbing,
@@ -1180,10 +1233,13 @@ class ClosedCaption extends StatelessWidget {
     }
 
     final TextStyle effectiveTextStyle = textStyle ??
-        DefaultTextStyle.of(context).style.copyWith(
-              fontSize: 36.0,
-              color: Colors.white,
-            );
+        DefaultTextStyle
+            .of(context)
+            .style
+            .copyWith(
+          fontSize: 36.0,
+          color: Colors.white,
+        );
 
     return Align(
       alignment: Alignment.bottomCenter,
