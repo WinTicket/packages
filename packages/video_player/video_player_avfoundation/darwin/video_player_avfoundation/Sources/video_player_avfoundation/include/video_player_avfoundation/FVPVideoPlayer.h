@@ -31,6 +31,10 @@ NS_ASSUME_NONNULL_BEGIN
 /// The current playback position of the video, in milliseconds.
 @property(nonatomic, readonly) int64_t position;
 
+@property(nonatomic, readonly) int64_t duration;
+
+@property(nonatomic, readonly) int64_t durationStartAt;
+
 /// Initializes a new instance of FVPVideoPlayer with the given asset, AV factory, and registrar.
 - (instancetype)initWithAsset:(NSString *)asset
                     avFactory:(id<FVPAVFactory>)avFactory
@@ -66,6 +70,13 @@ NS_ASSUME_NONNULL_BEGIN
 /// Seeks to the specified location in the video and calls the completion handler when done, if one
 /// is supplied.
 - (void)seekTo:(int64_t)location completionHandler:(void (^_Nullable)(BOOL))completionHandler;
+
+- (int64_t)duration:(int64_t)input error:(FlutterError *)error;
+
+- (void)setBuffer:(double)buffer;
+
+- (AVPlayerItem *)currentItem;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -322,4 +322,26 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
 #endif
 }
 
+- (nullable NSNumber *)durationForPlayer:(NSInteger)playerId error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error { 
+  FVPVideoPlayer *player = self.playersByIdentifier[@(playerId)];
+  return @([player duration]);
+}
+
+
+- (nullable NSNumber *)playingForPlayer:(NSInteger)playerId error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error { 
+  FVPVideoPlayer *player = self.playersByIdentifier[@(playerId)];
+  return @(player.isPlaying);
+}
+
+- (void)setBufferSec:(NSInteger)second forPlayer:(NSInteger)playerId error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error {
+  FVPVideoPlayer *player = self.playersByIdentifier[@(playerId)];
+  AVPlayerItem *currentItem = player.currentItem;
+  currentItem.preferredForwardBufferDuration = second;
+}
+
+- (nullable NSNumber *)startForPlayer:(NSInteger)playerId error:(FlutterError * _Nullable __autoreleasing * _Nonnull)error { 
+  FVPVideoPlayer *player = self.playersByIdentifier[@(playerId)];
+  return @([player durationStartAt]);
+}
+
 @end
