@@ -434,6 +434,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         );
     }
 
+    _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
+        kUninitializedTextureId;
+
     if (videoPlayerOptions?.mixWithOthers != null) {
       await _videoPlayerPlatform
           .setMixWithOthers(videoPlayerOptions!.mixWithOthers);
@@ -441,14 +444,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     final Buffer? bufferOption = videoPlayerOptions?.buffer;
 
-    // AndroidはtextureIdが不要。かつcreateの実行前じゃないといけない。
+    // AndroidはtextureIdが不要。かつcreateの実行前じゃないといけない。 <- ??
     if (defaultTargetPlatform == TargetPlatform.android &&
         bufferOption != null) {
       await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
     }
 
-    _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
-        kUninitializedTextureId;
     // iOSはtextureIdが必要
     if (defaultTargetPlatform == TargetPlatform.iOS && bufferOption != null) {
       await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
