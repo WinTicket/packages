@@ -472,17 +472,6 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       }];
 }
 
-- (int64_t)durationStartAt {
-  NSValue *seekableRange = _player.currentItem.seekableTimeRanges.lastObject;
-  if (seekableRange) {
-    CMTimeRange seekableDuration = [seekableRange CMTimeRangeValue];
-    return FVPCMTimeToMillis(seekableDuration.start);
-  }
-  else {
-    return 0;
-  }
-}
-
 - (void)setIsLooping:(BOOL)isLooping {
   _isLooping = isLooping;
 }

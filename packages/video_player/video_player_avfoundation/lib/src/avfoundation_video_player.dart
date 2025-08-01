@@ -198,7 +198,7 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> setBuffer(int playerId, Buffer buffer) async {
+  Future<void> setBuffer(int playerId, Buffer buffer) {
     if (buffer.maxBufferMs == null) {
       return Future<void>.value();
     }
