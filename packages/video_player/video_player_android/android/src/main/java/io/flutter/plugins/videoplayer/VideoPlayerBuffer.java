@@ -4,7 +4,9 @@
 
 package io.flutter.plugins.videoplayer;
 
-class VideoPlayerOptions {
-  public boolean mixWithOthers;
-  public VideoPlayerBuffer buffer;
+public class VideoPlayerBuffer {
+  public int minBufferMs;
+  public int maxBufferMs;
+  public int bufferForPlaybackMs;
+  public int bufferForPlaybackAfterRebufferMs;
 }
