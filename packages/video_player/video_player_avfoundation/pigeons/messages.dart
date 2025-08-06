@@ -26,6 +26,13 @@ class CreationOptions {
   Map<String, String> httpHeaders;
 }
 
+class BufferMessage {
+  int? minBufferMs;
+  int? maxBufferMs;
+  int? bufferForPlaybackMs;
+  int? bufferForPlaybackAfterRebufferMs;
+}
+
 @HostApi(dartHostTestHandler: 'TestHostVideoPlayerApi')
 abstract class AVFoundationVideoPlayerApi {
   @ObjCSelector('initialize')
@@ -56,8 +63,8 @@ abstract class AVFoundationVideoPlayerApi {
   void pause(int textureId);
   @ObjCSelector('setMixWithOthers:')
   void setMixWithOthers(bool mixWithOthers);
-  @ObjCSelector('setBuffer:forPlayer:')
-  void setBuffer(int second, int textureId);
+  @ObjCSelector('setBuffer:withBuffer:')
+  void setBuffer(int textureId, BufferMessage msg);
   @ObjCSelector('isPlaying:')
   bool isPlaying(int textureId);
 }

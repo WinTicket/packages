@@ -106,10 +106,11 @@ class _ApiLogger implements TestHostVideoPlayerApi {
   }
 
   @override
-  void setBuffer(int second, int textureId) {
-    log.add('setBufferSec');
+  void setBuffer(int textureId, BufferMessage msg) {
+    log.add('setBuffer');
     this.textureId = textureId;
-    // This method is not implemented in the test, but you can add logic if needed.
+    // Here we would normally handle the buffer message, but for testing,
+    // we just log it.
   }
 
   @override

@@ -207,7 +207,8 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
 
   @SuppressLint("UnsafeOptInUsageError")
   @Override
-  public void setBuffer(@NonNull Messages.BufferMessage msg) {
+  public void setBuffer(@NonNull Long textureId, @NonNull Messages.BufferMessage msg) {
+    VideoPlayer player = getPlayer(textureId);
     VideoPlayerBuffer buffer = new VideoPlayerBuffer();
     buffer.minBufferMs = (msg.getMinBufferMs() == null)
             ? DefaultLoadControl.DEFAULT_MIN_BUFFER_MS
@@ -221,7 +222,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, AndroidVideoPlayerApi {
     buffer.bufferForPlaybackAfterRebufferMs = (msg.getBufferForPlaybackAfterRebufferMs() == null)
             ? DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
             : toIntExact(msg.getBufferForPlaybackAfterRebufferMs());
-    options.buffer = buffer;
+    player.setBuffer(buffer);
   }
 
   @NonNull

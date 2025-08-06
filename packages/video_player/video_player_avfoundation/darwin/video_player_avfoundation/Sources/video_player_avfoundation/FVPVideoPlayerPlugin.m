@@ -861,9 +861,13 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   [player pause];
 }
 
-- (void)setBuffer:(NSInteger)second forPlayer:(NSInteger)textureId error:(FlutterError **)error {
-  FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
-  [player setBuffer:(double)second];
+- (void)setBuffer:(FVPBufferMessage *)msg error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByTextureId[@(msg.textureId)];
+  // maxBufferMsを秒に変換（iOSはpreferredForwardBufferDurationが秒単位）
+  if (msg.maxBufferMs != nil) {
+    double bufferSeconds = msg.maxBufferMs.doubleValue / 1000.0;
+    [player setBuffer:bufferSeconds];
+  }
 }
 
 - (nullable NSNumber *)isPlaying:(NSInteger)textureId error:(FlutterError **)error {

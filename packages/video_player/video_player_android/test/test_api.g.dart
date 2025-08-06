@@ -73,7 +73,7 @@ abstract class TestHostVideoPlayerApi {
 
   void setMixWithOthers(bool mixWithOthers);
 
-  void setBuffer(BufferMessage msg);
+  void setBuffer(int textureId, BufferMessage msg);
 
   bool isPlaying(int textureId);
 
@@ -396,11 +396,14 @@ abstract class TestHostVideoPlayerApi {
           assert(message != null,
           'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setBuffer was null.');
           final List<Object?> args = (message as List<Object?>?)!;
-          final BufferMessage? arg_msg = (args[0] as BufferMessage?);
+          final int? arg_textureId = (args[0] as int?);
+          assert(arg_textureId != null,
+              'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setBuffer was null, expected non-null int.');
+          final BufferMessage? arg_msg = (args[1] as BufferMessage?);
           assert(arg_msg != null,
               'Argument for dev.flutter.pigeon.video_player_android.AndroidVideoPlayerApi.setBuffer was null, expected non-null BufferMessage.');
           try {
-            api.setBuffer(arg_msg!);
+            api.setBuffer(arg_textureId!, arg_msg!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

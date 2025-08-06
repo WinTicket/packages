@@ -69,6 +69,42 @@ class CreationOptions {
   }
 }
 
+class BufferMessage {
+  BufferMessage({
+    this.minBufferMs,
+    this.maxBufferMs,
+    this.bufferForPlaybackMs,
+    this.bufferForPlaybackAfterRebufferMs,
+  });
+
+  int? minBufferMs;
+
+  int? maxBufferMs;
+
+  int? bufferForPlaybackMs;
+
+  int? bufferForPlaybackAfterRebufferMs;
+
+  Object encode() {
+    return <Object?>[
+      minBufferMs,
+      maxBufferMs,
+      bufferForPlaybackMs,
+      bufferForPlaybackAfterRebufferMs,
+    ];
+  }
+
+  static BufferMessage decode(Object result) {
+    result as List<Object?>;
+    return BufferMessage(
+      minBufferMs: result[0] as int?,
+      maxBufferMs: result[1] as int?,
+      bufferForPlaybackMs: result[2] as int?,
+      bufferForPlaybackAfterRebufferMs: result[3] as int?,
+    );
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -80,6 +116,9 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is CreationOptions) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
+    }    else if (value is BufferMessage) {
+      buffer.putUint8(130);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -90,6 +129,8 @@ class _PigeonCodec extends StandardMessageCodec {
     switch (type) {
       case 129: 
         return CreationOptions.decode(readValue(buffer)!);
+      case 130: 
+        return BufferMessage.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -415,7 +456,7 @@ class AVFoundationVideoPlayerApi {
     }
   }
 
-  Future<void> setBuffer(int second, int textureId) async {
+  Future<void> setBuffer(int textureId, BufferMessage msg) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -423,7 +464,7 @@ class AVFoundationVideoPlayerApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[second, textureId]) as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[textureId, msg]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {

@@ -151,6 +151,20 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
     return _api.setMixWithOthers(mixWithOthers);
   }
 
+  @override
+  Future<void> setBuffer(int textureId, Buffer buffer) {
+    return _api.setBuffer(
+      textureId,
+      BufferMessage(
+        minBufferMs: buffer.minBufferMs,
+        maxBufferMs: buffer.maxBufferMs,
+        bufferForPlaybackMs: buffer.bufferForPlaybackMs,
+        bufferForPlaybackAfterRebufferMs:
+            buffer.bufferForPlaybackAfterRebufferMs,
+      ),
+    );
+  }
+
   EventChannel _eventChannelFor(int textureId) {
     return EventChannel('flutter.io/videoPlayer/videoEvents$textureId');
   }

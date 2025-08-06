@@ -36,6 +36,12 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 - (NSArray<id> *)toList;
 @end
 
+@interface FVPBufferMessage ()
++ (FVPBufferMessage *)fromList:(NSArray<id> *)list;
++ (nullable FVPBufferMessage *)nullableFromList:(NSArray<id> *)list;
+- (NSArray<id> *)toList;
+@end
+
 @implementation FVPCreationOptions
 + (instancetype)makeWithAsset:(nullable NSString *)asset
     uri:(nullable NSString *)uri
@@ -73,6 +79,39 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 }
 @end
 
+@implementation FVPBufferMessage
++ (instancetype)makeWithMinBufferMs:(nullable NSNumber *)minBufferMs
+    maxBufferMs:(nullable NSNumber *)maxBufferMs
+    bufferForPlaybackMs:(nullable NSNumber *)bufferForPlaybackMs
+    bufferForPlaybackAfterRebufferMs:(nullable NSNumber *)bufferForPlaybackAfterRebufferMs {
+  FVPBufferMessage* pigeonResult = [[FVPBufferMessage alloc] init];
+  pigeonResult.minBufferMs = minBufferMs;
+  pigeonResult.maxBufferMs = maxBufferMs;
+  pigeonResult.bufferForPlaybackMs = bufferForPlaybackMs;
+  pigeonResult.bufferForPlaybackAfterRebufferMs = bufferForPlaybackAfterRebufferMs;
+  return pigeonResult;
+}
++ (FVPBufferMessage *)fromList:(NSArray<id> *)list {
+  FVPBufferMessage *pigeonResult = [[FVPBufferMessage alloc] init];
+  pigeonResult.minBufferMs = GetNullableObjectAtIndex(list, 0);
+  pigeonResult.maxBufferMs = GetNullableObjectAtIndex(list, 1);
+  pigeonResult.bufferForPlaybackMs = GetNullableObjectAtIndex(list, 2);
+  pigeonResult.bufferForPlaybackAfterRebufferMs = GetNullableObjectAtIndex(list, 3);
+  return pigeonResult;
+}
++ (nullable FVPBufferMessage *)nullableFromList:(NSArray<id> *)list {
+  return (list) ? [FVPBufferMessage fromList:list] : nil;
+}
+- (NSArray<id> *)toList {
+  return @[
+    self.minBufferMs ?: [NSNull null],
+    self.maxBufferMs ?: [NSNull null],
+    self.bufferForPlaybackMs ?: [NSNull null],
+    self.bufferForPlaybackAfterRebufferMs ?: [NSNull null],
+  ];
+}
+@end
+
 @interface FVPMessagesPigeonCodecReader : FlutterStandardReader
 @end
 @implementation FVPMessagesPigeonCodecReader
@@ -80,6 +119,8 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
   switch (type) {
     case 129: 
       return [FVPCreationOptions fromList:[self readValue]];
+    case 130: 
+      return [FVPBufferMessage fromList:[self readValue]];
     default:
       return [super readValueOfType:type];
   }
@@ -92,6 +133,9 @@ static id GetNullableObjectAtIndex(NSArray<id> *array, NSInteger key) {
 - (void)writeValue:(id)value {
   if ([value isKindOfClass:[FVPCreationOptions class]]) {
     [self writeByte:129];
+    [self writeValue:[value toList]];
+  } else if ([value isKindOfClass:[FVPBufferMessage class]]) {
+    [self writeByte:130];
     [self writeValue:[value toList]];
   } else {
     [super writeValue:value];
@@ -381,13 +425,13 @@ void SetUpFVPAVFoundationVideoPlayerApiWithSuffix(id<FlutterBinaryMessenger> bin
         binaryMessenger:binaryMessenger
         codec:FVPGetMessagesCodec()];
     if (api) {
-      NSCAssert([api respondsToSelector:@selector(setBuffer:forPlayer:error:)], @"FVPAVFoundationVideoPlayerApi api (%@) doesn't respond to @selector(setBuffer:forPlayer:error:)", api);
+      NSCAssert([api respondsToSelector:@selector(setBuffer:withBuffer:error:)], @"FVPAVFoundationVideoPlayerApi api (%@) doesn't respond to @selector(setBuffer:withBuffer:error:)", api);
       [channel setMessageHandler:^(id _Nullable message, FlutterReply callback) {
         NSArray<id> *args = message;
-        NSInteger arg_second = [GetNullableObjectAtIndex(args, 0) integerValue];
-        NSInteger arg_textureId = [GetNullableObjectAtIndex(args, 1) integerValue];
+        NSInteger arg_textureId = [GetNullableObjectAtIndex(args, 0) integerValue];
+        FVPBufferMessage *arg_msg = GetNullableObjectAtIndex(args, 1);
         FlutterError *error;
-        [api setBuffer:arg_second forPlayer:arg_textureId error:&error];
+        [api setBuffer:arg_textureId withBuffer:arg_msg error:&error];
         callback(wrapResult(nil, error));
       }];
     } else {

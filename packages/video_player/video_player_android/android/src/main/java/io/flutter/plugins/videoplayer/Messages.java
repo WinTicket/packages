@@ -405,7 +405,7 @@ public class Messages {
 
     void setMixWithOthers(@NonNull Boolean mixWithOthers);
 
-    void setBuffer(@NonNull BufferMessage msg);
+    void setBuffer(@NonNull Long textureId, @NonNull BufferMessage msg);
 
     @NonNull 
     Boolean isPlaying(@NonNull Long textureId);
@@ -707,9 +707,10 @@ public class Messages {
               (message, reply) -> {
                 ArrayList<Object> wrapped = new ArrayList<>();
                 ArrayList<Object> args = (ArrayList<Object>) message;
-                BufferMessage msgArg = (BufferMessage) args.get(0);
+                Long textureIdArg = (Long) args.get(0);
+                BufferMessage msgArg = (BufferMessage) args.get(1);
                 try {
-                  api.setBuffer(msgArg);
+                  api.setBuffer(textureIdArg, msgArg);
                   wrapped.add(0, null);
                 }
  catch (Throwable exception) {

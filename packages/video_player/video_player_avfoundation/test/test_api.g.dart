@@ -24,6 +24,9 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is CreationOptions) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
+    }    else if (value is BufferMessage) {
+      buffer.putUint8(130);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -34,6 +37,8 @@ class _PigeonCodec extends StandardMessageCodec {
     switch (type) {
       case 129: 
         return CreationOptions.decode(readValue(buffer)!);
+      case 130: 
+        return BufferMessage.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -70,7 +75,7 @@ abstract class TestHostVideoPlayerApi {
 
   void setMixWithOthers(bool mixWithOthers);
 
-  void setBuffer(int second, int textureId);
+  void setBuffer(int textureId, BufferMessage msg);
 
   bool isPlaying(int textureId);
 
@@ -418,14 +423,14 @@ abstract class TestHostVideoPlayerApi {
           assert(message != null,
           'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer was null.');
           final List<Object?> args = (message as List<Object?>?)!;
-          final int? arg_second = (args[0] as int?);
-          assert(arg_second != null,
-              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer was null, expected non-null int.');
-          final int? arg_textureId = (args[1] as int?);
+          final int? arg_textureId = (args[0] as int?);
           assert(arg_textureId != null,
               'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer was null, expected non-null int.');
+          final BufferMessage? arg_msg = (args[1] as BufferMessage?);
+          assert(arg_msg != null,
+              'Argument for dev.flutter.pigeon.video_player_avfoundation.AVFoundationVideoPlayerApi.setBuffer was null, expected non-null BufferMessage.');
           try {
-            api.setBuffer(arg_second!, arg_textureId!);
+            api.setBuffer(arg_textureId!, arg_msg!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);

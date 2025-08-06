@@ -94,7 +94,7 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   }
 
   /// Gets the video duration as [Duration] from the start.
-  Future<Duration> getDuration(int playerId) {
+  Future<Duration> getDuration(int textureId) {
     throw UnimplementedError('getDuration() has not been implemented.');
   }
 
@@ -114,12 +114,12 @@ abstract class VideoPlayerPlatform extends PlatformInterface {
   }
 
   /// Sets the buffer.
-  Future<void> setBuffer(int playerId, Buffer buffer) {
+  Future<void> setBuffer(int textureId, Buffer buffer) {
     throw UnimplementedError('setBuffer() has not been implemented.');
   }
 
   /// Get latest isPlaying status from ExoPlayer/AVPlayer
-  Future<bool> getIsPlaying(int playerId) {
+  Future<bool> getIsPlaying(int textureId) {
     throw UnimplementedError('isPlaying() has not been implemented.');
   }
 }

@@ -14,6 +14,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @class FVPCreationOptions;
+@class FVPBufferMessage;
 
 @interface FVPCreationOptions : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
@@ -28,6 +29,17 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic, copy, nullable) NSString * packageName;
 @property(nonatomic, copy, nullable) NSString * formatHint;
 @property(nonatomic, copy) NSDictionary<NSString *, NSString *> * httpHeaders;
+@end
+
+@interface FVPBufferMessage : NSObject
++ (instancetype)makeWithMinBufferMs:(nullable NSNumber *)minBufferMs
+    maxBufferMs:(nullable NSNumber *)maxBufferMs
+    bufferForPlaybackMs:(nullable NSNumber *)bufferForPlaybackMs
+    bufferForPlaybackAfterRebufferMs:(nullable NSNumber *)bufferForPlaybackAfterRebufferMs;
+@property(nonatomic, strong, nullable) NSNumber * minBufferMs;
+@property(nonatomic, strong, nullable) NSNumber * maxBufferMs;
+@property(nonatomic, strong, nullable) NSNumber * bufferForPlaybackMs;
+@property(nonatomic, strong, nullable) NSNumber * bufferForPlaybackAfterRebufferMs;
 @end
 
 /// The codec used by all APIs.
@@ -51,7 +63,7 @@ NSObject<FlutterMessageCodec> *FVPGetMessagesCodec(void);
 - (void)seekTo:(NSInteger)position forPlayer:(NSInteger)textureId completion:(void (^)(FlutterError *_Nullable))completion;
 - (void)pausePlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
 - (void)setMixWithOthers:(BOOL)mixWithOthers error:(FlutterError *_Nullable *_Nonnull)error;
-- (void)setBuffer:(NSInteger)second forPlayer:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
+- (void)setBuffer:(NSInteger)textureId withBuffer:(FVPBufferMessage *)msg error:(FlutterError *_Nullable *_Nonnull)error;
 /// @return `nil` only when `error != nil`.
 - (nullable NSNumber *)isPlaying:(NSInteger)textureId error:(FlutterError *_Nullable *_Nonnull)error;
 @end
