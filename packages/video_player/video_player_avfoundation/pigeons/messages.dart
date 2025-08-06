@@ -45,6 +45,10 @@ abstract class AVFoundationVideoPlayerApi {
   void play(int textureId);
   @ObjCSelector('positionForPlayer:')
   int getPosition(int textureId);
+  @ObjCSelector('duration:')
+  int duration(int textureId);
+  @ObjCSelector('start:')
+  int start(int textureId);
   @async
   @ObjCSelector('seekTo:forPlayer:')
   void seekTo(int position, int textureId);
@@ -52,4 +56,8 @@ abstract class AVFoundationVideoPlayerApi {
   void pause(int textureId);
   @ObjCSelector('setMixWithOthers:')
   void setMixWithOthers(bool mixWithOthers);
+  @ObjCSelector('setBuffer:forPlayer:')
+  void setBuffer(int second, int textureId);
+  @ObjCSelector('isPlaying:')
+  bool isPlaying(int textureId);
 }

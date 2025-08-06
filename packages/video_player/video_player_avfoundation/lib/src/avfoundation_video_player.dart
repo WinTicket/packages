@@ -89,14 +89,26 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
-  Future<void> seekTo(int textureId, Duration position) {
-    return _api.seekTo(position.inMilliseconds, textureId);
+  Future<void> seekTo(int textureId, Duration position) async {
+    final int startResponse = await _api.start(textureId);
+    final Duration startDuration = Duration(milliseconds: startResponse);
+    return _api.seekTo(
+      position.inMilliseconds + startDuration.inMilliseconds,
+      textureId,
+    );
   }
 
   @override
   Future<Duration> getPosition(int textureId) async {
     final int position = await _api.getPosition(textureId);
-    return Duration(milliseconds: position);
+    final int startResponse = await _api.start(textureId);
+    return Duration(milliseconds: position - startResponse);
+  }
+
+  @override
+  Future<Duration> getDuration(int textureId) async {
+    final int durationResponse = await _api.duration(textureId);
+    return Duration(milliseconds: durationResponse);
   }
 
   @override
@@ -167,5 +179,20 @@ class AVFoundationVideoPlayer extends VideoPlayerPlatform {
       Duration(milliseconds: pair[0] as int),
       Duration(milliseconds: pair[1] as int),
     );
+  }
+
+  @override
+  Future<void> setBuffer(int textureId, Buffer buffer) async {
+    if (buffer.maxBufferMs == null) {
+      return;
+    }
+    // maxBufferMsはミリ秒なので秒に変換する
+    final int second = buffer.maxBufferMs! ~/ 1000;
+    return _api.setBuffer(second, textureId);
+  }
+
+  @override
+  Future<bool> getIsPlaying(int textureId) async {
+    return _api.isPlaying(textureId);
   }
 }

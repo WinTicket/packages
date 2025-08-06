@@ -337,7 +337,12 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
       for (NSValue *rangeValue in [object loadedTimeRanges]) {
         CMTimeRange range = [rangeValue CMTimeRangeValue];
         int64_t start = FVPCMTimeToMillis(range.start);
-        [values addObject:@[ @(start), @(start + FVPCMTimeToMillis(range.duration)) ]];
+        int64_t durationStartAt = [self durationStartAt];
+        // Androidを合わせる形で対応
+        // iOSはライブ配信を開始した時間を元に計算してる
+        // positionに対してbufferが行われている範囲を追加する
+        // See Also: https://github.com/WinTicket/ios/blob/f81dc5e5c77cfb2e102277b1ebf5f3395ceda004/WinTicket/Sources/Components/Video/VideoState.swift#L313
+        [values addObject:@[ @(start - durationStartAt), @(start + FVPCMTimeToMillis(range.duration) - durationStartAt) ]];
       }
       _eventSink(@{@"event" : @"bufferingUpdate", @"values" : values});
     }
@@ -390,6 +395,19 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
           @{@"event" : @"isPlayingStateUpdate", @"isPlaying" : player.rate > 0 ? @YES : @NO});
     }
   }
+}
+
+- (void)setBuffer:(double)buffer {
+    AVPlayerItem *currentItem = self.player.currentItem;
+    currentItem.preferredForwardBufferDuration = buffer;
+}
+
+- (BOOL)getLatestIsPlaying {
+    return _player.rate > 0;
+}
+
+- (AVPlayerItem *)currentItem {
+    return _player.currentItem;
 }
 
 - (void)updatePlayingState {
@@ -471,10 +489,30 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 - (int64_t)duration {
-  // Note: https://openradar.appspot.com/radar?id=4968600712511488
-  // `[AVPlayerItem duration]` can be `kCMTimeIndefinite`,
-  // use `[[AVPlayerItem asset] duration]` instead.
-  return FVPCMTimeToMillis([[[_player currentItem] asset] duration]);
+    // AndroidのDurationはライブ配信と過去動画でいい感じに数字を返してくれるが
+    // iOSでは
+    // - ライブ配信: seekableTimeRanges
+    // - mp4の動画: duration
+    // を利用する必要がある。seekableTimeRangesが有無で条件分岐する
+    NSValue *seekableRange = _player.currentItem.seekableTimeRanges.lastObject;
+    if (seekableRange) {
+        CMTimeRange seekableDuration = [seekableRange CMTimeRangeValue];
+        return FVPCMTimeToMillis(seekableDuration.duration);
+    }
+    else {
+        return FVPCMTimeToMillis(_player.currentItem.asset.duration);
+    }
+}
+
+- (int64_t)durationStartAt {
+    NSValue *seekableRange = _player.currentItem.seekableTimeRanges.lastObject;
+    if (seekableRange) {
+        CMTimeRange seekableDuration = [seekableRange CMTimeRangeValue];
+        return FVPCMTimeToMillis(seekableDuration.start);
+    }
+    else {
+        return FVPCMTimeToMillis(_player.currentItem.asset.duration);
+    }
 }
 
 - (void)seekTo:(int64_t)location completionHandler:(void (^)(BOOL))completionHandler {
@@ -796,6 +834,16 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   return @([player position]);
 }
 
+- (nullable NSNumber *)duration:(NSInteger)textureId error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
+  return @([player duration]);
+}
+
+- (nullable NSNumber *)start:(NSInteger)textureId error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
+  return @([player durationStartAt]);
+}
+
 - (void)seekTo:(NSInteger)position
      forPlayer:(NSInteger)textureId
     completion:(nonnull void (^)(FlutterError *_Nullable))completion {
@@ -811,6 +859,16 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 - (void)pausePlayer:(NSInteger)textureId error:(FlutterError **)error {
   FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
   [player pause];
+}
+
+- (void)setBuffer:(NSInteger)second forPlayer:(NSInteger)textureId error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
+  [player setBuffer:(double)second];
+}
+
+- (nullable NSNumber *)isPlaying:(NSInteger)textureId error:(FlutterError **)error {
+  FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
+  return @([player getLatestIsPlaying]);
 }
 
 - (void)setMixWithOthers:(BOOL)mixWithOthers
