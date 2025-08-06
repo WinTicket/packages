@@ -266,6 +266,13 @@ void main() {
       expect(position, const Duration(milliseconds: 234));
     });
 
+    test('getDuration', () async {
+      final Duration duration = await player.getDuration(1);
+      expect(log.log.last, 'duration');
+      expect(log.passedTextureId, 1);
+      expect(duration, const Duration(milliseconds: 456));
+    });
+
     test('videoEventsFor', () async {
       const String mockChannel = 'flutter.io/videoPlayer/videoEvents123';
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger

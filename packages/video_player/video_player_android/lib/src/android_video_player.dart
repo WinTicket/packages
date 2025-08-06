@@ -101,6 +101,12 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
   }
 
   @override
+  Future<Duration> getDuration(int textureId) async {
+    final int duration = await _api.duration(textureId);
+    return Duration(milliseconds: duration);
+  }
+
+  @override
   Stream<VideoEvent> videoEventsFor(int textureId) {
     return _eventChannelFor(textureId)
         .receiveBroadcastStream()
