@@ -190,4 +190,9 @@ class AndroidVideoPlayer extends VideoPlayerPlatform {
       Duration(milliseconds: pair[1] as int),
     );
   }
+
+  @override
+  Future<bool> getIsPlaying(int textureId) async {
+    return _api.isPlaying(textureId);
+  }
 }

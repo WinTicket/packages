@@ -127,6 +127,16 @@ class VideoPlayerPlugin extends VideoPlayerPlatform {
   }
 
   @override
+  Future<Duration> getDuration(int textureId) async {
+    return _player(textureId).getDuration();
+  }
+
+  @override
+  Future<bool> getIsPlaying(int textureId) async {
+    return _player(textureId).getIsPlaying();
+  }
+
+  @override
   Stream<VideoEvent> videoEventsFor(int textureId) {
     return _player(textureId).events;
   }

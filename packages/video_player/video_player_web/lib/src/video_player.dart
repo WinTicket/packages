@@ -231,6 +231,20 @@ class VideoPlayer {
     return Duration(milliseconds: (_videoElement.currentTime * 1000).round());
   }
 
+  /// Returns the duration of the video.
+  Duration getDuration() {
+    final double duration = _videoElement.duration;
+    if (duration.isNaN || duration.isInfinite) {
+      return Duration.zero;
+    }
+    return Duration(milliseconds: (duration * 1000).round());
+  }
+
+  /// Returns whether the video is currently playing.
+  bool getIsPlaying() {
+    return !_videoElement.paused && !_videoElement.ended;
+  }
+
   /// Sets options
   Future<void> setOptions(VideoPlayerWebOptions options) async {
     // In case this method is called multiple times, reset options.
