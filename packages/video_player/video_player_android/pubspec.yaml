@@ -27,7 +27,7 @@ dependency_overrides:
       git:
         url: https://github.com/WinTicket/packages.git
         path: packages/video_player/video_player_platform_interface
-        ref: 38856189efe8dece386b8968edadd98d61e0db63
+        ref: 5b113513c464d30ca34a94d3c5ceccbd20e79ed5
 
 dev_dependencies:
   flutter_test:
