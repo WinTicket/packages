@@ -179,18 +179,6 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
     return exoPlayer.isPlaying();
   }
 
-  @SuppressLint("UnsafeOptInUsageError")
-  void setBuffer(VideoPlayerBuffer buffer) {
-    // Update the options for future player recreations
-    options.buffer = buffer;
-    
-    // Re-create the player with new buffer settings
-    ExoPlayerState currentState = ExoPlayerState.save(exoPlayer);
-    exoPlayer.release();
-    exoPlayer = createVideoPlayer();
-    currentState.restore(exoPlayer);
-  }
-
   void dispose() {
     exoPlayer.release();
     surfaceProducer.release();
