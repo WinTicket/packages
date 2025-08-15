@@ -444,7 +444,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     final Buffer? bufferOption = videoPlayerOptions?.buffer;
 
-    // AndroidはtextureIdが不要。かつcreateの実行前じゃないといけない。
+    // On Android, textureId is not required, and this must be done before calling create.
     if (defaultTargetPlatform == TargetPlatform.android &&
         bufferOption != null) {
       await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
