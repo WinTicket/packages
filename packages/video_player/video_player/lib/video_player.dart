@@ -450,7 +450,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
     }
 
-    // iOSはtextureIdが必要
+    // iOS requires textureId
     if (defaultTargetPlatform == TargetPlatform.iOS && bufferOption != null) {
       await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
     }
