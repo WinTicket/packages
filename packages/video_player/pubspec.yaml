@@ -6,6 +6,16 @@ publish_to: 'none'
 environment:
   sdk: ^3.9.0
 
+dev_dependencies:
+  melos: ^7.0.0
+
+melos:
+  scripts:
+    generate:
+      run: |
+        melos exec --depends-on build_runner -- dart run build_runner build
+        melos exec --depends-on pigeon -- dart run pigeon --input pigeons/messages.dart
+
 workspace:
   - video_player
   - video_player/example
