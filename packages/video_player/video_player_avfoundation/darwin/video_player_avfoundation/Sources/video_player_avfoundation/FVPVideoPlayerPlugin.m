@@ -747,6 +747,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 #if TARGET_OS_IOS
   // Allow audio playback when the Ring/Silent switch is set to silent
   [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+  // Activate the audio session to ensure background playback works reliably.
+  [[AVAudioSession sharedInstance] setActive:YES error:nil];
 #endif
 
   [self.playersByTextureId
@@ -826,6 +828,10 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
 
 - (void)playPlayer:(NSInteger)textureId error:(FlutterError **)error {
   FVPVideoPlayer *player = self.playersByTextureId[@(textureId)];
+  // Ensure the audio session is active when starting playback (iOS only).
+#if !TARGET_OS_OSX
+  [[AVAudioSession sharedInstance] setActive:YES error:nil];
+#endif
   [player play];
 }
 
@@ -887,6 +893,8 @@ NS_INLINE CGFloat radiansToDegrees(CGFloat radians) {
   } else {
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
   }
+  // Keep the session active to allow background audio.
+  [[AVAudioSession sharedInstance] setActive:YES error:nil];
 #endif
 }
 

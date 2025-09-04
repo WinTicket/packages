@@ -434,9 +434,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         );
     }
 
-    _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
-        kUninitializedTextureId;
-
+    // Apply global options that must be set before player creation on some platforms.
     if (videoPlayerOptions?.mixWithOthers != null) {
       await _videoPlayerPlatform
           .setMixWithOthers(videoPlayerOptions!.mixWithOthers);
@@ -444,13 +442,19 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
     final Buffer? bufferOption = videoPlayerOptions?.buffer;
 
-    // On Android, textureId is not required, and this must be done before calling create.
+    // On Android, buffer options are consumed during player creation. They must
+    // be set before calling create, and the textureId is not used by the
+    // platform implementation for this call.
     if (defaultTargetPlatform == TargetPlatform.android &&
         bufferOption != null) {
-      await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
+      await _videoPlayerPlatform
+          .setBuffer(VideoPlayerController.kUninitializedTextureId, bufferOption);
     }
 
-    // iOS requires textureId
+    _textureId = (await _videoPlayerPlatform.create(dataSourceDescription)) ??
+        kUninitializedTextureId;
+
+    // iOS requires a valid textureId to apply buffer configuration.
     if (defaultTargetPlatform == TargetPlatform.iOS && bufferOption != null) {
       await _videoPlayerPlatform.setBuffer(_textureId, bufferOption);
     }

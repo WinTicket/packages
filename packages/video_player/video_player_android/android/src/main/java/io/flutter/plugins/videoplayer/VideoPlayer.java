@@ -90,15 +90,22 @@ final class VideoPlayer implements TextureRegistry.SurfaceProducer.Callback {
       exoPlayer = createVideoPlayer();
       savedStateDuring.restore(exoPlayer);
       savedStateDuring = null;
+    } else {
+      exoPlayer.setVideoSurface(surfaceProducer.getSurface());
     }
   }
 
   @RestrictTo(RestrictTo.Scope.LIBRARY)
   public void onSurfaceDestroyed() {
-    // Intentionally do not call pause/stop here, because the surface has already been released
-    // at this point (see https://github.com/flutter/flutter/issues/156451).
-    savedStateDuring = ExoPlayerState.save(exoPlayer);
-    exoPlayer.release();
+    if (exoPlayer.isPlaying()) {
+      exoPlayer.clearVideoSurface();
+      savedStateDuring = null;
+    } else {
+      // Intentionally do not call pause/stop here, because the surface has already been released
+      // at this point (see https://github.com/flutter/flutter/issues/156451).
+      savedStateDuring = ExoPlayerState.save(exoPlayer);
+      exoPlayer.release();
+    }
   }
 
   @SuppressLint("UnsafeOptInUsageError")
