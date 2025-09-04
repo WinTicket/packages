@@ -282,6 +282,14 @@ static void upgradeAudioSessionCategory(AVAudioSessionCategory requestedCategory
 
 - (void)playPlayer:(NSInteger)playerIdentifier error:(FlutterError **)error {
   FVPVideoPlayer *player = self.playersByIdentifier[@(playerIdentifier)];
+  // Ensure the audio session is active before starting playback so that
+  // background audio continues correctly on iOS.
+#if TARGET_OS_IOS
+  // It's safe to call setActive:YES multiple times; AVAudioSession will coalesce state.
+  // Intentionally ignoring the error here to avoid surfacing spurious failures to Dart;
+  // if activation fails, playback will still be attempted and native logs can assist.
+  [AVAudioSession.sharedInstance setActive:YES error:nil];
+#endif
   [player play];
 }
 
